@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  firmware-host-tests:
+    name: firmware host tests + can-replay
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firmware-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: firmware-tests
+      - run: cargo test --locked
+      - run: cargo run --locked --bin can-replay -- --quiet fixtures/synthetic-drive.log
+
+  ingest-server:
+    name: ingest-server build + tests + e2e dedup replay
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ingest-server
+      - run: cargo test --locked
+        working-directory: ingest-server
+      - run: scripts/replay.sh --down
+
+  phone-relay:
+    name: phone-relay typecheck + tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: phone-relay
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run build
+      - run: npm test

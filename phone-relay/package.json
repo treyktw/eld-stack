@@ -1,0 +1,29 @@
+{
+  "name": "@eld-stack/phone-relay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "React Native BLE relay that pulls records from the ELD dongle, uploads them, and ACKs synced seq ranges back.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": ">=0.74",
+    "react-native-ble-plx": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "react": "19.3.1",
+    "react-native": "0.88.0",
+    "react-native-ble-plx": "3.5.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
+  }
+}

@@ -1,0 +1,49 @@
+[package]
+name = "eld-ingest-server"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "eld-ingest-server"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.8", default-features = false, features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "postgres",
+    "json",
+    "migrate",
+    "macros",
+] }
+sha2 = "0.10"
+hex = "0.4"
+tracing = "0.1"
+# `json` and `time` for line-delimited JSON logs, so a log pipeline can parse
+# this service the same way as any other structured-logging service.
+tracing-subscriber = { version = "0.3", features = [
+    "env-filter",
+    "json",
+    "time",
+] }
+thiserror = "1"
+anyhow = "1"
+dotenvy = "0.15"
+subtle = "2"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+# Optional: error reporting is only enabled when SENTRY_DSN is set.
+sentry = { version = "0.34", default-features = false, features = [
+    "backtrace",
+    "contexts",
+    "panic",
+    "reqwest",
+    "rustls",
+] }
+# Forwards `tracing` events at ERROR into Sentry. The alternative is a
+# `sentry::capture_*` call beside every `tracing::error!`, which is the kind of
+# duplication that decays until only some errors are reported.
+sentry-tracing = "0.34"

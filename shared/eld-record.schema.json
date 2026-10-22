@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:eld-stack:eld-record:v1",
+  "title": "EldRecord",
+  "description": "Canonical record shared by firmware (comms/protocol.rs + app.rs envelope), phone-relay (src/storage.ts EldRecord) and ingest-server (src/model.rs Envelope). Dedup identity is (device_id, seq). See docs/ingest-contract.md.",
+  "type": "object",
+  "required": ["device_id", "seq", "ts_ms", "type", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "device_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "(boot_epoch << 30) | counter: 23-bit boot epoch over a 30-bit counter, 53 bits total so it stays exact in JavaScript (<= 2^53 - 1) and below the Postgres BIGINT maximum; monotonic per device."
+    },
+    "ts_ms": {
+      "type": ["integer", "null"],
+      "exclusiveMinimum": 0,
+      "description": "UTC Unix epoch ms, or null until GPS time is trusted. Never uptime disguised as UTC."
+    },
+    "monotonic_ms": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Milliseconds since boot; optional only for records queued by older firmware."
+    },
+    "type": {
+      "enum": ["engine_snapshot", "fault_code", "vin", "odometer", "driver_event", "heartbeat", "bus_census"]
+    },
+    "data": { "type": "object" }
+  }
+}

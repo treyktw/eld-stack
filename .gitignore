@@ -1,0 +1,29 @@
+# Rust
+target/
+.embuild/
+
+# ESP-IDF leaves these beside the firmware crate.
+sdkconfig.old
+/firmware/build/
+/firmware/managed_components/
+/firmware/dependencies.lock
+
+# Node
+node_modules/
+phone-relay/dist/
+
+# Local environment. `*.env.example` files are the committed templates.
+.env
+.env.*
+!.env.example
+
+# Firmware signing key material must never enter the repository.
+*.pem
+*.key
+!*.key.rs
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
+.zed/

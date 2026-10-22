@@ -1,0 +1,53 @@
+# Rust often needs a bit of an extra main task stack size compared to C (the default is 3K)
+# Bumped well above the default: the App orchestrator is boxed onto the heap, but
+# the deep ESP-IDF driver-install call chains (TWAI/SD/UART) during boot() still
+# want generous headroom. Too small here corrupts memory -> cache-error panic.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=65536
+
+# Increase a bit these stack sizes as they are also a bit too small by default
+CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE=4096
+CONFIG_ESP_TIMER_TASK_STACK_SIZE=8192
+CONFIG_FREERTOS_IDLE_TASK_STACKSIZE=4096
+
+# You might have to increase this further if you spawn your own Rust threads
+# that allocate large stack variables; or better yet - use
+# `std::thread::Builder::new().stack_size(XXX)` for spawning
+CONFIG_PTHREAD_TASK_STACK_SIZE_DEFAULT=4096
+
+# BLE phone relay (GATT server).
+CONFIG_BT_ENABLED=y
+CONFIG_BT_BLUEDROID_ENABLED=y
+CONFIG_BT_CLASSIC_ENABLED=n
+CONFIG_BTDM_CTRL_MODE_BLE_ONLY=y
+CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY=n
+CONFIG_BTDM_CTRL_MODE_BTDM=n
+CONFIG_BT_BLE_42_FEATURES_SUPPORTED=y
+CONFIG_BT_BLE_50_FEATURES_SUPPORTED=n
+CONFIG_BT_BTC_TASK_STACK_SIZE=15000
+CONFIG_BT_BLE_DYNAMIC_ENV_MEMORY=y
+
+# NOTE: the custom partition table (partitions.csv) is applied by espflash at
+# flash time (see tools/flash.sh --partition-table), NOT here. esp-idf-sys does
+# not consume CONFIG_PARTITION_TABLE_CUSTOM and the IDF build doesn't need it.
+
+# --- OTA ---------------------------------------------------------------------
+# Arm the bootloader's rollback. A new image is written to the inactive slot and
+# marked "pending verify"; if it does not call esp_ota_mark_app_valid_cancel_
+# rollback() after proving itself healthy, the next boot returns to the previous
+# slot. Without this a build that crashes on startup bricks the unit, and the
+# unit is behind a dash.
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+
+# The measured release image is 1.41 MB, so two 1.875 MB OTA slots fit in 4 MB
+# (see partitions.csv). No hardware change is needed for OTA. If the image ever
+# outgrows its slot, move to an 8 MB part and change both of these together —
+# the bootloader must agree with the module actually fitted, or it refuses a
+# partition table that runs off the end of flash.
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="16MB"
+
+# T-SIM7670G-S3-Standard uses 2 MB of quad-SPI PSRAM.
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_QUAD=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_BOOT_INIT=y

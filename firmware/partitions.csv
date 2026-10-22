@@ -1,0 +1,37 @@
+# ELD firmware partition table — dual OTA slots on 16 MB flash.
+#
+# Sized from a measurement, not a guess. `cargo build --release` +
+# `espflash save-image --chip esp32` produces a 1,477,008 byte image
+# (1.41 MB) as of 2026-08-29, with the OBD, cellular and OTA work included.
+#
+# Two 1.875 MB slots retain the already-tested layout while the T-SIM7670G-S3
+# port is brought up. The module has 16 MB flash, so this leaves capacity for a
+# later partition expansion without making the first hardware flash risky.
+#
+# Both slots must be the same size and neither may be `factory`, or the
+# bootloader cannot roll back. `otadata` records which slot is active and sits
+# below them at a fixed offset the bootloader knows; it is 0x2000 because
+# ESP-IDF keeps two mirrored copies for power-loss safety.
+#
+# App partitions must start on a 64 KB boundary: 0x20000 and 0x200000 both do.
+#
+# Total: 0x3E0000 = 3.88 MB of 4 MB.
+#
+# WATCH THE HEADROOM. At 1.41 MB the app has ~470 KB of slack per slot. Check it
+# after any large addition:
+#
+#     cargo build --release
+#     espflash save-image --chip esp32s3 \
+#         target/xtensa-esp32s3-espidf/release/eld-firmware /tmp/app.bin
+#
+# If the image passes roughly 1.7 MB, move to an 8 MB module and 3 MB slots
+# (ota_0 at 0x20000, ota_1 at 0x320000) rather than shrinking the slots — an
+# image that does not fit its slot is discovered at flash time, and on a unit
+# already in a truck it is discovered as a failed update.
+#
+# Name,     Type, SubType, Offset,   Size,     Flags
+nvs,        data, nvs,     0x9000,   0x6000,
+otadata,    data, ota,     0xf000,   0x2000,
+phy_init,   data, phy,     0x11000,  0x1000,
+ota_0,      app,  ota_0,   0x20000,  0x1E0000,
+ota_1,      app,  ota_1,   0x200000, 0x1E0000,

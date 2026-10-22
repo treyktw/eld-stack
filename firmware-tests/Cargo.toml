@@ -1,0 +1,23 @@
+# Host-side unit tests for the firmware's *pure* J1939 logic.
+#
+# The firmware crate only builds for xtensa/esp-idf (see firmware/.cargo/config.toml
+# + rust-toolchain.toml), so its decoders can't be exercised by `cargo test`
+# there. This crate lives OUTSIDE firmware/ (so it uses the host toolchain) and
+# re-includes the pure source files via `#[path]` — the source of truth stays in
+# firmware/src/j1939. Run with: `cd firmware-tests && cargo test`.
+[package]
+name = "eld-decoders-test"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+heapless = "0.8"
+
+[dev-dependencies]
+ed25519-dalek = "2.2.0"
+
+# Host demo: decode a candump log with the firmware's own decoders.
+[[bin]]
+name = "can-replay"
+path = "src/bin/can-replay.rs"
